@@ -55,6 +55,31 @@
 /* 等高线标签 */
 .contour-label{position:absolute;pointer-events:none;z-index:5;font-size:9px;color:#fff;font-family:Consolas,monospace;background:rgba(0,0,0,.5);padding:1px 4px;border-radius:3px;white-space:nowrap}
 
+/* 引导气泡 */
+.interactive-prompt {
+  position: absolute;
+  bottom: 64px;
+  left: 12px;
+  background: rgba(17, 17, 34, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border);
+  border-radius: var(--rs);
+  padding: 8px 12px;
+  font-size: 11px;
+  color: var(--text2);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  pointer-events: none;
+  animation: pulse-glow 2.5s infinite ease-in-out;
+}
+@keyframes pulse-glow {
+  0%, 100% { border-color: var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+  50% { border-color: var(--accent); box-shadow: 0 4px 16px rgba(124, 111, 247, 0.25); }
+}
+
 /* 工具栏分组 */
 .toolbar .sep{width:1px;height:18px;background:var(--border);margin:0 2px}
 .toolbar{flex-wrap:wrap;max-width:90%;justify-content:center}
@@ -298,7 +323,7 @@ html,body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',
       <div class="field">
         <div class="range-wrap">
           <label style="min-width:50px">分割数</label>
-          <input type="range" id="cubeCount" min="5" max="80" step="1" value="20">
+          <input type="range" id="cubeCount" min="5" max="150" step="1" value="20">
           <span class="val" id="cubeCountVal">20</span>
         </div>
       </div>
@@ -348,21 +373,21 @@ html,body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',
     <div class="toolbar">
       <button class="btn sm" id="btnTangent" title="显示/隐藏切平面 (T)">切平面</button>
       <button class="btn sm" id="btnGrad" title="显示/隐藏梯度 (F)">梯度</button>
-      <button class="btn sm" id="btnNormal" title="显示/隐藏法向量 (N)">法向量</button>
-      <button class="btn sm" id="btnTaylor" title="二阶泰勒近似">泰勒</button>
+      <button class="btn sm outline" id="btnNormal" title="显示/隐藏法向量 (N)">法向量</button>
+      <button class="btn sm outline" id="btnTaylor" title="二阶泰勒近似">泰勒</button>
       <button class="btn sm" id="btnCP" title="显示/隐藏驻点">驻点</button>
       <button class="btn sm" id="btnConstraint" title="显示/隐藏约束">约束</button>
       <div class="sep"></div>
       <button class="btn sm" id="btnWire" title="线框/实体">线框</button>
       <button class="btn sm" id="btnColorMap" title="颜色映射">颜色</button>
-      <button class="btn sm" id="btnIntegral" title="显示/隐藏积分区域">积分</button>
-      <button class="btn sm" id="btnPath" title="梯度下降路径">路径</button>
+      <button class="btn sm outline" id="btnIntegral" title="显示/隐藏积分区域">积分</button>
+      <button class="btn sm outline" id="btnPath" title="梯度下降路径">路径</button>
       <div class="sep"></div>
-      <button class="btn sm" id="btnAutoRotate" title="自动旋转">旋转</button>
-      <button class="btn sm" id="btnReset">重置</button>
-      <button class="btn sm" id="btnTop">顶视</button>
-      <button class="btn sm" id="btnSide">侧视</button>
-      <button class="btn sm" id="btnFront">正视</button>
+      <button class="btn sm outline" id="btnAutoRotate" title="自动旋转">旋转</button>
+      <button class="btn sm outline" id="btnReset">重置</button>
+      <button class="btn sm outline" id="btnTop">顶视</button>
+      <button class="btn sm outline" id="btnSide">侧视</button>
+      <button class="btn sm outline" id="btnFront">正视</button>
       <button class="btn sm outline" id="btnScreenshot">&#128247;</button>
     </div>
     <div class="cube-grow-hint" id="cubeHint">小方块生长动画中...</div>
@@ -373,6 +398,12 @@ html,body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',
       <span id="pathInfo" style="color:var(--accent-g);font-family:Consolas,monospace"></span>
     </div>
     <div class="normal-hint" id="normalHint">按 <kbd style="padding:1px 4px;background:var(--surface2);border:1px solid var(--border);border-radius:3px;font-family:Consolas,monospace;color:var(--accent-g)">N</kbd> 显示法向量</div>
+    
+    <div class="interactive-prompt" id="interactPrompt">
+      <span>💡</span>
+      <span><b>探索提示：</b>在3D曲面上滑动鼠标，可实时查看检测点的切平面、梯度及一阶偏导！</span>
+    </div>
+
     <div class="hover-tooltip" id="hoverTip">
       <div>f(<span class="coord" id="htX">0</span>, <span class="coord" id="htY">0</span>) = <span class="coord" id="htZ">0</span></div>
       <div style="font-size:10px;color:var(--text3);margin-top:2px">∇f = (<span id="htGx">0</span>, <span id="htGy">0</span>)</div>
@@ -485,9 +516,7 @@ const constraints = {
 // ============================================================
 let customFnObj = null;
 
-// 数学函数和常数映射表
 const MATH_ALIASES = {
-  // Unicode 符号
   'π': 'pi', '\u03C0': 'pi', '\u1D70': 'pi',
   'ℯ': 'e', '\u212F': 'e',
   '∞': 'Infinity', '\u221E': 'Infinity',
@@ -495,7 +524,6 @@ const MATH_ALIASES = {
   '∛': 'cbrt', '\u221B': 'cbrt',
   '²': '^2', '\u00B2': '^2',
   '³': '^3', '\u00B3': '^3',
-  // 函数别名
   'ln': 'log',
   'tg': 'tan',
   'ctg': 'cot',
@@ -508,16 +536,10 @@ const MATH_ALIASES = {
   'th': 'tanh',
 };
 
-// 有效的 math.js 单字母常数/函数（避免被隐式乘法破坏）
-const MATH_SINGLE_LETTER = new Set(['e', 'x', 'y', 'i']);
-
 function preprocessExpr(expr) {
   let e = expr.trim();
-
-  // 替换 Unicode 符号和别名（按长度降序，避免部分匹配）
   const aliases = Object.entries(MATH_ALIASES).sort((a, b) => b[0].length - a[0].length);
   for (const [from, to] of aliases) {
-    // 使用 \b 边界匹配多字符别名，单字符直接替换
     if (from.length === 1) {
       e = e.split(from).join(to);
     } else {
@@ -525,24 +547,15 @@ function preprocessExpr(expr) {
       e = e.replace(re, to);
     }
   }
-
-  // 处理数字开头的隐式乘法: 2x → 2*x, 2pi → 2*pi, 2sin(x) → 2*sin(x)
   e = e.replace(/(\d)([a-zA-Z])/g, '$1*$2');
-
-  // 处理右括号后的隐式乘法: )( → )*(, )a → )*a, )3 → )*3
   e = e.replace(/\)\(/g, ')*(');
   e = e.replace(/\)([a-zA-Z])/g, ')*$1');
   e = e.replace(/\)(\d)/g, ')*$1');
-
-  // 处理数字+左括号的隐式乘法: 2( → 2*(
   e = e.replace(/(\d)\(/g, '$1*(');
-
   return e;
 }
 
-// 完整的 math.js 可用函数和常数 scope
 const MATH_SCOPE = {
-  // 三角
   sin: Math.sin, cos: Math.cos, tan: Math.tan,
   asin: Math.asin, acos: Math.acos, atan: Math.atan,
   sinh: Math.sinh, cosh: Math.cosh, tanh: Math.tanh,
@@ -550,22 +563,21 @@ const MATH_SCOPE = {
   acosh: x => Math.log(x + Math.sqrt(x*x - 1)),
   atanh: x => 0.5 * Math.log((1+x)/(1-x)),
   cot: x => 1 / Math.tan(x),
-  // 指数对数
   exp: Math.exp, log: Math.log, ln: Math.log,
   log10: Math.log10, log2: Math.log2,
   sqrt: Math.sqrt, cbrt: Math.cbrt,
   pow: Math.pow,
-  // 取整
   abs: Math.abs, ceil: Math.ceil, floor: Math.floor,
   round: Math.round, sign: Math.sign,
-  // 其他
   min: Math.min, max: Math.max,
   hypot: Math.hypot,
-  // 常数
   pi: Math.PI, e: Math.E,
-  // 变量占位（会被覆盖）
   x: 0, y: 0
 };
+
+// 限制3D绘制时的最大高度截断，防止大数导致视图错乱崩溃，数值面板仍显示原值
+const MAX_HEIGHT_CLAMP = 8;
+const MIN_HEIGHT_CLAMP = -8;
 
 function makeCustomFn(expr) {
   const cleanExpr = preprocessExpr(expr);
@@ -588,7 +600,6 @@ function makeCustomFn(expr) {
 
   const testV = ev(0, 0);
   if (!isFinite(testV)) {
-    // 尝试其他测试点
     const testPoints = [[1,1], [0.5, 0.5], [1, 0], [0, 1], [-1, -1]];
     let foundFinite = false;
     for (const [tx, ty] of testPoints) {
@@ -784,11 +795,12 @@ function findCriticalPointsAsync(fnObj) {
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x08080f);
-scene.fog = new THREE.Fog(0x08080f, 15, 40);
+scene.fog = new THREE.Fog(0x08080f, 15, 45);
 
 const container = document.getElementById('canvas-container');
 const camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 100);
-camera.position.set(6, 6, 8);
+// 初始飞入动画的高视角坐标
+camera.position.set(12, 16, 14);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
 renderer.setSize(container.clientWidth, container.clientHeight);
@@ -847,17 +859,27 @@ const grid = new THREE.GridHelper(20, 40, 0x222244, 0x161630);
 grid.position.y = -0.01;
 scene.add(grid);
 
-// ===================== 状态 =====================
+// ===================== 状态初始化 (默认开启炫彩、线框与切平面以增强视觉效果) =====================
 
 let curFuncKey = 'custom2';
 let curFn = builtinFns.custom2;
 let curConstraint = 'circle';
 let cParams = {};
 let mode = 'extreme';
-let showTangent = false, showGrad = false, showNormal = false, showCP = true, showConstraint = true, wireframe = false, showColorMap = false, showIntegral = false;
-let showTaylor = false, showDirDeriv = false, showSection = 'none'; // 'x','y','none'
+let showTangent = true;    // 默认展示切平面
+let showGrad = true;       // 默认展示梯度
+let showNormal = false;
+let showCP = true;
+let showConstraint = true;
+let wireframe = true;      // 默认开启网格，显现数理模拟的高质感
+let showColorMap = true;   // 默认开启炫彩高度映射，增强画面对比度和美感
+let showIntegral = false;
+let showTaylor = false;
+let showDirDeriv = false;
+let showSection = 'none';
+
 let probePt = { x: 1, y: 0.5 };
-let dirAngle = 45; // 方向导数角度
+let dirAngle = 45;
 let isAutoRotating = false;
 
 // 小方块状态
@@ -878,11 +900,11 @@ let normalArrows = [];
 let integralMesh = null;
 let pathLine = null, pathDots = [];
 let isPathAnimating = false;
-let taylorMesh = null; // 泰勒近似曲面
-let dirDerivArrow = null; // 方向导数箭头
-let sectionPlane = null, sectionCurve = null; // 截面平面和曲线
+let taylorMesh = null;
+let dirDerivArrow = null;
+let sectionPlane = null, sectionCurve = null;
 let sectionAnimId = null;
-let constraintCurve3D = null; // 约束三维交线
+let constraintCurve3D = null;
 
 // ===================== 约束参数滑块 =====================
 
@@ -979,21 +1001,35 @@ function approxIntegral(fn, domain) {
   return s;
 }
 
-// ---- 曲面生成（支持颜色映射）----
+// ---- 曲面生成 (已修复初始三维深度映射逻辑) ----
 function mkSurface(fn, domain, useColorMap = false) {
   const [x0, x1, y0, y1] = domain;
   const res = 80;
   const geo = new THREE.PlaneGeometry(x1 - x0, y1 - y0, res, res);
   const pos = geo.attributes.position.array;
 
-  // 计算所有点的函数值，用于颜色映射
   let zmin = Infinity, zmax = -Infinity;
   const zvals = [];
+  const cx = (x0 + x1) / 2;
+  const cy = (y0 + y1) / 2;
+
   for (let i = 0; i < pos.length; i += 3) {
-    const x = pos[i] + (x0 + x1) / 2;
-    const y = pos[i + 2] + (y0 + y1) / 2;
+    const rawX = pos[i];
+    const rawY = pos[i + 1]; // PlaneGeometry原始Y网格坐标
+
+    const x = rawX + cx;
+    const y = rawY + cy;
     const z = fn.f(x, y);
-    pos[i + 1] = z;
+    
+    // 高度裁剪防溢出
+    let clampedZ = Math.max(MIN_HEIGHT_CLAMP, Math.min(MAX_HEIGHT_CLAMP, z));
+    if (isNaN(clampedZ)) clampedZ = 0;
+
+    // 重构顶点的三维投影，使其完美映射到世界空间
+    pos[i] = x;           // X -> Math x
+    pos[i + 1] = clampedZ; // Y -> Math z (函数高度)
+    pos[i + 2] = y;       // Z -> Math y
+
     zvals.push(z);
     if (isFinite(z)) { zmin = Math.min(zmin, z); zmax = Math.max(zmax, z); }
   }
@@ -1001,13 +1037,11 @@ function mkSurface(fn, domain, useColorMap = false) {
 
   let mat;
   if (useColorMap && isFinite(zmin) && isFinite(zmax) && zmax > zmin) {
-    // 为每个顶点设置颜色
     const colors = new Float32Array(pos.length);
     const color = new THREE.Color();
     for (let i = 0; i < pos.length; i += 3) {
       const z = zvals[i / 3];
       const t = (z - zmin) / (zmax - zmin);
-      // HSL: 低值=紫色(0.75), 中值=青色(0.5), 高值=黄色/红色(0.08)
       const hue = 0.75 - t * 0.67;
       const sat = 0.7 + t * 0.2;
       const light = 0.45 + t * 0.25;
@@ -1030,15 +1064,14 @@ function mkSurface(fn, domain, useColorMap = false) {
   const mesh = new THREE.Mesh(geo, mat);
   mesh.userData = { zmin, zmax };
 
-  const wmat = new THREE.MeshBasicMaterial({
-    color: 0xa99bfe, wireframe: true, transparent: true, opacity: 0.25
-  });
-  const wmesh = new THREE.Mesh(geo, wmat);
+  const wmesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({
+    color: 0xa99bfe, wireframe: true, transparent: true, opacity: 0.22
+  }));
 
   return { mesh, wmesh, zmin, zmax };
 }
 
-// ---- 切平面 ----
+// ---- 切平面 (已修复顶点相对映射) ----
 function mkTangent(fn, px, py) {
   const z = fn.f(px, py);
   const fx = fn.fx(px, py), fy = fn.fy(px, py);
@@ -1046,11 +1079,19 @@ function mkTangent(fn, px, py) {
   const geo = new THREE.PlaneGeometry(s * 2, s * 2, 1, 1);
   const pos = geo.attributes.position.array;
   for (let i = 0; i < pos.length; i += 3) {
-    pos[i + 1] = z + fx * pos[i] + fy * pos[i + 2];
+    const rawX = pos[i];
+    const rawY = pos[i + 1];
+    let rawZ = z + fx * rawX + fy * rawY;
+    let clampedZ = Math.max(MIN_HEIGHT_CLAMP, Math.min(MAX_HEIGHT_CLAMP, rawZ));
+    if (isNaN(clampedZ)) clampedZ = 0;
+
+    pos[i] = rawX;
+    pos[i + 1] = clampedZ;
+    pos[i + 2] = rawY;
   }
   geo.computeVertexNormals();
   const mat = new THREE.MeshBasicMaterial({
-    color: 0x00d4c8, transparent: true, opacity: 0.45,
+    color: 0x00d4c8, transparent: true, opacity: 0.4,
     side: THREE.DoubleSide, depthWrite: false
   });
   const mesh = new THREE.Mesh(geo, mat);
@@ -1071,12 +1112,12 @@ function mkNormalArrows(fn, domain, count = 8) {
       const z = fn.f(x, y);
       const fx = fn.fx(x, y);
       const fy = fn.fy(x, y);
-      // 法向量 n = (-fx, 1, -fy)，归一化
       const len = Math.sqrt(fx * fx + 1 + fy * fy);
       if (!isFinite(len) || len < 1e-8) continue;
       const nx = -fx / len, ny = 1 / len, nz = -fy / len;
       const dir = new THREE.Vector3(nx, ny, nz);
-      const origin = new THREE.Vector3(x, z, y);
+      const renderZ = Math.max(MIN_HEIGHT_CLAMP, Math.min(MAX_HEIGHT_CLAMP, z));
+      const origin = new THREE.Vector3(x, renderZ, y);
       const arrow = new THREE.ArrowHelper(dir, origin, 0.6, 0xff6b6b, 0.12, 0.06);
       arrows.push(arrow);
     }
@@ -1084,7 +1125,7 @@ function mkNormalArrows(fn, domain, count = 8) {
   return arrows;
 }
 
-// ---- 二重积分区域填充（曲面下方体积）----
+// ---- 二重积分区域填充 ----
 function mkIntegralFill(fn, domain) {
   const [x0, x1, y0, y1] = domain;
   const nx = 30, ny = 30;
@@ -1097,18 +1138,19 @@ function mkIntegralFill(fn, domain) {
       const cx = x0 + (i + 0.5) * dx;
       const cy = y0 + (j + 0.5) * dy;
       const h = fn.f(cx, cy);
-      if (!isFinite(h)) continue;
-      const absH = Math.abs(h);
+      if (!isFinite(h) || isNaN(h)) continue;
+      
+      const clampedH = Math.max(MIN_HEIGHT_CLAMP, Math.min(MAX_HEIGHT_CLAMP, h));
+      const absH = Math.abs(clampedH);
       const geo = new THREE.BoxGeometry(dx * 0.92, absH, dy * 0.92);
-      // 根据高度着色
-      const t = Math.min(absH / 10, 1);
+      const t = Math.min(Math.abs(h) / 10, 1);
       color.setHSL(0.75 - t * 0.67, 0.6, 0.4 + t * 0.2);
       const mat = new THREE.MeshPhongMaterial({
         color: color.getHex(), transparent: true, opacity: 0.35,
         side: THREE.DoubleSide, depthWrite: false
       });
       const mesh = new THREE.Mesh(geo, mat);
-      mesh.position.set(cx, h >= 0 ? absH / 2 : -absH / 2, cy);
+      mesh.position.set(cx, clampedH >= 0 ? absH / 2 : -absH / 2, cy);
       group.add(mesh);
     }
   }
@@ -1122,16 +1164,15 @@ function computeGradientPath(fn, startX, startY, steps = 80, lr = 0.08) {
   for (let i = 0; i < steps; i++) {
     const z = fn.f(x, y);
     if (!isFinite(z)) break;
-    path.push({ x, y, z });
+    const clampedZ = Math.max(MIN_HEIGHT_CLAMP, Math.min(MAX_HEIGHT_CLAMP, z));
+    path.push({ x, y, z: clampedZ });
     const gx = fn.fx(x, y);
     const gy = fn.fy(x, y);
     if (!isFinite(gx) || !isFinite(gy)) break;
     const gLen = Math.hypot(gx, gy);
     if (gLen < 1e-6) break;
-    // 梯度下降（向负梯度方向移动）
     x -= lr * gx / gLen;
     y -= lr * gy / gLen;
-    // 限制在定义域内
     const [x0, x1, y0, y1] = fn.domain;
     if (x < x0 - 1 || x > x1 + 1 || y < y0 - 1 || y > y1 + 1) break;
   }
@@ -1156,7 +1197,7 @@ function mkPathDots(path) {
   return dots;
 }
 
-// ---- 二阶泰勒近似曲面 ----
+// ---- 二阶泰勒近似曲面 (已修复深度坐标) ----
 function mkTaylorSurface(fn, px, py, domain) {
   const [x0, x1, y0, y1] = domain;
   const res = 60;
@@ -1167,11 +1208,19 @@ function mkTaylorSurface(fn, px, py, domain) {
   const fxx0 = fn.fxx(px, py), fyy0 = fn.fyy(px, py), fxy0 = fn.fxy(px, py);
   const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
   for (let i = 0; i < pos.length; i += 3) {
-    const x = pos[i] + cx;
-    const y = pos[i + 2] + cy;
+    const rawX = pos[i];
+    const rawY = pos[i + 1];
+
+    const x = rawX + cx;
+    const y = rawY + cy;
     const dx = x - px, dy = y - py;
-    // T_2(x,y) = f(a,b) + fx*dx + fy*dy + 0.5*(fxx*dx^2 + 2*fxy*dx*dy + fyy*dy^2)
-    pos[i + 1] = z0 + fx0 * dx + fy0 * dy + 0.5 * (fxx0 * dx * dx + 2 * fxy0 * dx * dy + fyy0 * dy * dy);
+    let tz = z0 + fx0 * dx + fy0 * dy + 0.5 * (fxx0 * dx * dx + 2 * fxy0 * dx * dy + fyy0 * dy * dy);
+    let clampedTz = Math.max(MIN_HEIGHT_CLAMP, Math.min(MAX_HEIGHT_CLAMP, tz));
+    if (isNaN(clampedTz)) clampedTz = 0;
+
+    pos[i] = x;
+    pos[i + 1] = clampedTz;
+    pos[i + 2] = y;
   }
   geo.computeVertexNormals();
   const mat = new THREE.MeshPhongMaterial({
@@ -1188,14 +1237,13 @@ function mkDirDerivArrow(fn, px, py, angleDeg) {
   const fx = fn.fx(px, py), fy = fn.fy(px, py);
   const theta = angleDeg * Math.PI / 180;
   const ux = Math.cos(theta), uy = Math.sin(theta);
-  const dud = fx * ux + fy * uy; // 方向导数值
+  const dud = fx * ux + fy * uy;
   const len = Math.abs(dud) * 0.8;
   if (len < 1e-6) return null;
-  // 方向向量在切平面内: (ux, dud*scale, uy)
   const dir = new THREE.Vector3(ux, 0, uy).normalize();
-  // 在切平面上方显示
   const color = dud >= 0 ? 0x55efc4 : 0xff6b6b;
-  const arrow = new THREE.ArrowHelper(dir, new THREE.Vector3(px, z + 0.05, py), Math.min(len, 3), color, 0.15, 0.08);
+  const clampedZ = Math.max(MIN_HEIGHT_CLAMP, Math.min(MAX_HEIGHT_CLAMP, z));
+  const arrow = new THREE.ArrowHelper(dir, new THREE.Vector3(px, clampedZ + 0.05, py), Math.min(len, 3), color, 0.15, 0.08);
   return { arrow, value: dud };
 }
 
@@ -1207,7 +1255,10 @@ function mkConstraintCurve3D(fn, cn, cp) {
   const pts3d = [];
   for (const p of pts) {
     const z = fn.f(p.x, p.y);
-    if (isFinite(z)) pts3d.push(new THREE.Vector3(p.x, z, p.y));
+    if (isFinite(z)) {
+      const clampedZ = Math.max(MIN_HEIGHT_CLAMP, Math.min(MAX_HEIGHT_CLAMP, z));
+      pts3d.push(new THREE.Vector3(p.x, clampedZ, p.y));
+    }
   }
   if (pts3d.length < 2) return null;
   const geo = new THREE.BufferGeometry().setFromPoints(pts3d);
@@ -1215,18 +1266,17 @@ function mkConstraintCurve3D(fn, cn, cp) {
   return new THREE.Line(geo, mat);
 }
 
-// ---- 截面平面和曲线 ----
+// ---- 截面平面和曲线 (已修正坐标镜像反向) ----
 function mkSectionPlaneAndCurve(fn, domain, axis, val) {
   const [x0, x1, y0, y1] = domain;
   const group = new THREE.Group();
-  // 截面平面
   let pgeo, ppos;
   if (axis === 'x') {
     pgeo = new THREE.PlaneGeometry(y1 - y0, 20, 1, 1);
-    ppos = new THREE.Vector3(val, 10, (y0 + y1) / 2);
+    ppos = new THREE.Vector3(val, 0, (y0 + y1) / 2);
   } else {
     pgeo = new THREE.PlaneGeometry(x1 - x0, 20, 1, 1);
-    ppos = new THREE.Vector3((x0 + x1) / 2, 10, val);
+    ppos = new THREE.Vector3((x0 + x1) / 2, 0, val);
   }
   const pmat = new THREE.MeshBasicMaterial({
     color: 0x55efc4, transparent: true, opacity: 0.12,
@@ -1234,23 +1284,30 @@ function mkSectionPlaneAndCurve(fn, domain, axis, val) {
   });
   const plane = new THREE.Mesh(pgeo, pmat);
   plane.position.copy(ppos);
-  if (axis === 'y') plane.rotation.y = Math.PI / 2;
+  
+  // 修正：axis === 'x' 截面才应当绕 Y 轴偏转 90° 以保持和 YZ 面平行
+  if (axis === 'x') plane.rotation.y = Math.PI / 2;
   group.add(plane);
 
-  // 截面曲线
   const cpts = [];
   const n = 80;
   if (axis === 'x') {
     for (let i = 0; i <= n; i++) {
       const y = y0 + (y1 - y0) * i / n;
       const z = fn.f(val, y);
-      if (isFinite(z)) cpts.push(new THREE.Vector3(val, z, y));
+      if (isFinite(z)) {
+        const clampedZ = Math.max(MIN_HEIGHT_CLAMP, Math.min(MAX_HEIGHT_CLAMP, z));
+        cpts.push(new THREE.Vector3(val, clampedZ, y));
+      }
     }
   } else {
     for (let i = 0; i <= n; i++) {
       const x = x0 + (x1 - x0) * i / n;
       const z = fn.f(x, val);
-      if (isFinite(z)) cpts.push(new THREE.Vector3(x, z, val));
+      if (isFinite(z)) {
+        const clampedZ = Math.max(MIN_HEIGHT_CLAMP, Math.min(MAX_HEIGHT_CLAMP, z));
+        cpts.push(new THREE.Vector3(x, clampedZ, val));
+      }
     }
   }
   if (cpts.length >= 2) {
@@ -1309,7 +1366,6 @@ function mkContours(fn, domain) {
       const mat = new THREE.LineBasicMaterial({ color: col.getHex(), transparent: true, opacity: 0.7 });
       group.add(new THREE.Line(geo, mat));
 
-      // 等高线数值标签：取线段中点
       const midIdx = Math.floor(pts.length / 2);
       const midPt = pts[midIdx];
       const lbl = mkLabel('z=' + lvl.toFixed(1), { x: midPt.x, y: midPt.y + 0.15, z: midPt.z }, '#ffffff');
@@ -1400,15 +1456,13 @@ function createCubes() {
       const cy = y + dy / 2;
       const h = fn.f(cx, cy);
 
-      const cubeH = Math.abs(h);
-      const baseZ = h >= 0 ? 0 : h;
+      const cubeH = Math.abs(isFinite(h) ? Math.max(MIN_HEIGHT_CLAMP, Math.min(MAX_HEIGHT_CLAMP, h)) : 0);
+      const baseZ = (h >= 0 ? 0 : -cubeH);
 
-      // 彩色：基于位置和高度的 HSL
       const hue = (i / n * 0.3 + j / n * 0.2 + (cubeH / 10) * 0.1) % 1;
       color.setHSL(hue, 0.75, 0.55 + Math.min(cubeH / 20, 0.2));
       cubeInstancedMesh.setColorAt(idx, color);
 
-      // 初始状态：缩放为 0（隐藏）
       dummy.position.set(cx, baseZ, cy);
       dummy.scale.set(0, 0, 0);
       dummy.updateMatrix();
@@ -1420,7 +1474,7 @@ function createCubes() {
         baseZ: baseZ,
         cx: cx,
         cy: cy,
-        delay: (j * n + i) * 0.0008, // 波浪式延迟
+        delay: (j * n + i) * 0.0008,
         duration: 0.8,
         startTime: -1
       });
@@ -1434,11 +1488,9 @@ function createCubes() {
   cubeGroup.add(cubeInstancedMesh);
   cubesVisible = true;
 
-  // 显示提示
   document.getElementById('cubeHint').classList.add('show');
   setTimeout(() => document.getElementById('cubeHint').classList.remove('show'), 2000);
 
-  // 生长动画
   let animStart = -1;
   function animateGrow(timestamp) {
     if (animStart < 0) animStart = timestamp;
@@ -1450,7 +1502,6 @@ function createCubes() {
       if (elapsed < anim.delay) { allDone = false; continue; }
 
       const t = Math.min((elapsed - anim.delay) / anim.duration, 1);
-      // easeOutCubic
       const ease = 1 - Math.pow(1 - t, 3);
 
       const scaleY = ease * anim.targetH;
@@ -1495,20 +1546,34 @@ function clearAll() {
   if (constraintCurve3D) { scene.remove(constraintCurve3D); constraintCurve3D = null; }
 }
 
+// 统一控制工具栏物理按钮的状态表现
+function updateButtonStates() {
+  document.getElementById('btnTangent').className = 'btn sm' + (showTangent ? '' : ' outline');
+  document.getElementById('btnGrad').className = 'btn sm' + (showGrad ? '' : ' outline');
+  document.getElementById('btnNormal').className = 'btn sm' + (showNormal ? '' : ' outline');
+  document.getElementById('btnTaylor').className = 'btn sm' + (showTaylor ? '' : ' outline');
+  document.getElementById('btnCP').className = 'btn sm' + (showCP ? '' : ' outline');
+  document.getElementById('btnConstraint').className = 'btn sm' + (showConstraint ? '' : ' outline');
+  document.getElementById('btnWire').className = 'btn sm' + (wireframe ? '' : ' outline');
+  document.getElementById('btnColorMap').className = 'btn sm' + (showColorMap ? '' : ' outline');
+  document.getElementById('btnIntegral').className = 'btn sm' + (showIntegral ? '' : ' outline');
+}
+
 function updateScene() {
   clearAll();
+  updateButtonStates();
   const fn = curFn;
   const d = fn.domain;
 
   if (mode === 'contour') {
     contourGroup = mkContours(fn, d);
     scene.add(contourGroup);
-    // 在等高线模式也显示驻点
     if (showCP && fn.cps) {
       fn.cps.forEach(cp => {
         const z = fn.f(cp.x, cp.y);
         const col = cp.type === 'min' ? 0x00d4c8 : cp.type === 'max' ? 0xfdcb6e : 0xff6b6b;
-        const dot = mkDot({ x: cp.x, y: cp.y, z: z * 0.05 }, col, 0.1);
+        const clampedZ = Math.max(MIN_HEIGHT_CLAMP, Math.min(MAX_HEIGHT_CLAMP, z));
+        const dot = mkDot({ x: cp.x, y: cp.y, z: clampedZ * 0.05 }, col, 0.1);
         scene.add(dot); cpDots.push(dot);
       });
     }
@@ -1518,8 +1583,8 @@ function updateScene() {
     scene.add(surfaceMesh);
     if (wireframe) scene.add(wireMesh);
 
-    // 更新颜色条
-    if (showColorMap && isFinite(s.zmin) && isFinite(s.zmax)) {
+    // 颜色条同步
+    if (showColorMap && isFinite(s.zmin) && isFinite(s.zmax) && s.zmax > s.zmin) {
       document.getElementById('colorbar').style.display = '';
       document.getElementById('cbMin').textContent = s.zmin.toFixed(1);
       document.getElementById('cbMid').textContent = ((s.zmin + s.zmax) / 2).toFixed(1);
@@ -1528,59 +1593,53 @@ function updateScene() {
       document.getElementById('colorbar').style.display = 'none';
     }
 
-    // 法向量
     if (showNormal) {
       normalArrows = mkNormalArrows(fn, d, 8);
       normalArrows.forEach(a => scene.add(a));
     }
 
-    // 积分区域填充
     if (showIntegral) {
       integralMesh = mkIntegralFill(fn, d);
       scene.add(integralMesh);
     }
 
-    // 驻点
     if (showCP && fn.cps) {
       fn.cps.forEach(cp => {
         const z = fn.f(cp.x, cp.y);
         const col = cp.type === 'min' ? 0x00d4c8 : cp.type === 'max' ? 0xfdcb6e : 0xff6b6b;
-        const dot = mkDot({ x: cp.x, y: cp.y, z }, col, 0.12);
+        const clampedZ = Math.max(MIN_HEIGHT_CLAMP, Math.min(MAX_HEIGHT_CLAMP, z));
+        const dot = mkDot({ x: cp.x, y: cp.y, z: clampedZ }, col, 0.12);
         scene.add(dot); cpDots.push(dot);
-        const lbl = mkLabel(cp.type.toUpperCase(), { x: cp.x, y: z + 0.4, z: cp.y }, col === 0x00d4c8 ? '#00d4c8' : col === 0xfdcb6e ? '#fdcb6e' : '#ff6b6b');
+        const lbl = mkLabel(cp.type.toUpperCase(), { x: cp.x, y: clampedZ + 0.4, z: cp.y }, col === 0x00d4c8 ? '#00d4c8' : col === 0xfdcb6e ? '#fdcb6e' : '#ff6b6b');
         scene.add(lbl); cpDots.push(lbl);
       });
     }
 
-    // 检测点
     const pz = fn.f(probePt.x, probePt.y);
-    probeDot = mkDot({ x: probePt.x, y: probePt.y, z: pz }, 0x7c6ff7, 0.1);
+    const clampedPz = Math.max(MIN_HEIGHT_CLAMP, Math.min(MAX_HEIGHT_CLAMP, pz));
+    probeDot = mkDot({ x: probePt.x, y: probePt.y, z: clampedPz }, 0x7c6ff7, 0.1);
     scene.add(probeDot);
 
-    // 切平面
     if (showTangent) {
       tangentMesh = mkTangent(fn, probePt.x, probePt.y);
       scene.add(tangentMesh);
     }
 
-    // 梯度箭头
     if (showGrad) {
       const gfx = fn.fx(probePt.x, probePt.y), gfy = fn.fy(probePt.x, probePt.y);
       const len = Math.hypot(gfx, gfy);
       if (len > 1e-6) {
         const dir = new THREE.Vector3(gfx / len, 0, gfy / len);
-        gradArrow = new THREE.ArrowHelper(dir, new THREE.Vector3(probePt.x, pz, probePt.y), Math.min(len * 0.8, 2), 0x55efc4, 0.2, 0.1);
+        gradArrow = new THREE.ArrowHelper(dir, new THREE.Vector3(probePt.x, clampedPz, probePt.y), Math.min(len * 0.8, 2), 0x55efc4, 0.2, 0.1);
         scene.add(gradArrow);
       }
     }
 
-    // 二阶泰勒近似曲面
     if (showTaylor) {
       taylorMesh = mkTaylorSurface(fn, probePt.x, probePt.y, d);
       scene.add(taylorMesh);
     }
 
-    // 方向导数箭头
     if (showDirDeriv) {
       const ddr = mkDirDerivArrow(fn, probePt.x, probePt.y, dirAngle);
       if (ddr) {
@@ -1589,7 +1648,6 @@ function updateScene() {
       }
     }
 
-    // 截面
     if (showSection !== 'none') {
       const secVal = parseFloat(document.getElementById('secVal').value);
       const secGroup = mkSectionPlaneAndCurve(fn, d, showSection, secVal);
@@ -1597,26 +1655,24 @@ function updateScene() {
       scene.add(secGroup);
     }
 
-    // 约束
     if (showConstraint && mode === 'lagrange') {
       constraintLine = mkConstraint(constraints[curConstraint], cParams);
       if (constraintLine) scene.add(constraintLine);
 
-      // 约束曲面三维交线
       constraintCurve3D = mkConstraintCurve3D(fn, constraints[curConstraint], cParams);
       if (constraintCurve3D) scene.add(constraintCurve3D);
 
       const sols = solveLagrange(fn, constraints[curConstraint], cParams, d);
       sols.forEach(s => {
         const col = s.type === 'max' ? 0xfdcb6e : 0x00d4c8;
-        const dot = mkDot({ x: s.x, y: s.y, z: s.f }, col, 0.14);
+        const clampedSf = Math.max(MIN_HEIGHT_CLAMP, Math.min(MAX_HEIGHT_CLAMP, s.f));
+        const dot = mkDot({ x: s.x, y: s.y, z: clampedSf }, col, 0.14);
         scene.add(dot); lagrangeDots.push(dot);
-        const lbl = mkLabel('L:' + s.type, { x: s.x, y: s.f + 0.5, z: s.y }, s.type === 'max' ? '#fdcb6e' : '#00d4c8');
+        const lbl = mkLabel('L:' + s.type, { x: s.x, y: clampedSf + 0.5, z: s.y }, s.type === 'max' ? '#fdcb6e' : '#00d4c8');
         scene.add(lbl); lagrangeDots.push(lbl);
       });
     }
 
-    // 梯度下降路径
     if (pathLine) scene.add(pathLine);
     pathDots.forEach(d => scene.add(d));
   }
@@ -1654,12 +1710,10 @@ function updateInfo() {
   document.getElementById('iParallel').textContent = areParallel(fn, cn, px, py, pv) ? '是 ✓' : '否';
   document.getElementById('iIntegral').textContent = fmt(approxIntegral(fn, fn.domain));
 
-  // 更新方向导数显示
   const theta = dirAngle * Math.PI / 180;
   const dud = fx * Math.cos(theta) + fy * Math.sin(theta);
   document.getElementById('dirDerivVal').textContent = fmt(dud);
 
-  // 驻点列表
   const cpBox = document.getElementById('cpList');
   if (fn.cps && fn.cps.length) {
     cpBox.innerHTML = fn.cps.map(c => {
@@ -1798,14 +1852,12 @@ document.getElementById('preset10').addEventListener('click', () => applyCustomF
     icon.style.transform = expanded ? 'rotate(180deg)' : '';
   });
 
-  // 点击函数标签插入到输入框
   sheet.querySelectorAll('.fn-tag').forEach(tag => {
     tag.addEventListener('click', e => {
       e.stopPropagation();
       const input = document.getElementById('customFn');
       const fnName = tag.textContent;
       const insert = fnName === 'π' ? 'pi' : fnName;
-      // 在光标位置插入
       const start = input.selectionStart;
       const end = input.selectionEnd;
       const val = input.value;
@@ -1941,7 +1993,6 @@ function animatePath() {
   }
   document.getElementById('pathInfo').textContent = '步数: ' + path.length;
 
-  // 动画显示路径
   let idx = 0;
   const pts = [];
   function step() {
@@ -1955,7 +2006,6 @@ function animatePath() {
       pathLine = new THREE.Line(geo, mat);
       scene.add(pathLine);
     }
-    // 添加点标记
     if (idx % 3 === 0) {
       const dot = mkDot({ x: path[idx].x, y: path[idx].y, z: path[idx].z }, 0x55efc4, 0.05);
       scene.add(dot); pathDots.push(dot);
@@ -1998,13 +2048,13 @@ renderer.domElement.addEventListener('mousemove', e => {
     const p = intersects[0].point;
     const x = p.x, y = p.z;
     const z = curFn.f(x, y);
-    const gx = curFn.fx(x, y);
+    const gfx = curFn.fx(x, y);
     const gy = curFn.fy(x, y);
 
     document.getElementById('htX').textContent = x.toFixed(2);
     document.getElementById('htY').textContent = y.toFixed(2);
     document.getElementById('htZ').textContent = isFinite(z) ? z.toFixed(3) : 'N/A';
-    document.getElementById('htGx').textContent = isFinite(gx) ? gx.toFixed(3) : 'N/A';
+    document.getElementById('htGx').textContent = isFinite(gfx) ? gfx.toFixed(3) : 'N/A';
     document.getElementById('htGy').textContent = isFinite(gy) ? gy.toFixed(3) : 'N/A';
 
     hoverTip.style.left = (e.clientX + 15) + 'px';
@@ -2019,11 +2069,11 @@ renderer.domElement.addEventListener('mouseleave', () => {
   hoverTip.classList.remove('show');
 });
 
-// 法向量提示
+// 法向量提示延迟出现
 setTimeout(() => {
   document.getElementById('normalHint').classList.add('show');
   setTimeout(() => document.getElementById('normalHint').classList.remove('show'), 4000);
-}, 2000);
+}, 4500);
 
 // 快捷键
 window.addEventListener('keydown', e => {
@@ -2053,7 +2103,7 @@ window.addEventListener('resize', resize);
 // 动画循环
 function animate() {
   requestAnimationFrame(animate);
-  if (isAutoRotating) {
+  if (isAutoRotating && !introActive) {
     const speed = 0.003;
     const x = camera.position.x, z = camera.position.z;
     camera.position.x = x * Math.cos(speed) - z * Math.sin(speed);
@@ -2066,11 +2116,49 @@ function animate() {
 
 document.getElementById('funcSelect').value = 'custom2';
 
-// ===================== 初始化 =====================
+// ===================== 初始化与开场航拍视轨动画 =====================
+let introActive = true;
+// 飞入动画初始设置
+const introStart = { x: 12, y: 16, z: 14 }; // 侧后上方极佳的俯瞰点
+const introEnd = { x: 6, y: 6, z: 8 };      // 经典观察视角
+camera.position.set(introStart.x, introStart.y, introStart.z);
+ctrl.target.set(0, 0, 0);
+ctrl.enabled = false; // 飞入期间禁用鼠标操作，防止手势干扰
+
+function introAnim() {
+  const startTime = performance.now();
+  const duration = 2500; // 2.5秒精致滑行
+
+  function step(now) {
+    let t = (now - startTime) / duration;
+    if (t >= 1) {
+      t = 1;
+      introActive = false;
+      ctrl.enabled = true; // 解锁控制
+    }
+    // Cubic Ease Out 缓动
+    const ease = 1 - Math.pow(1 - t, 3);
+    camera.position.set(
+      introStart.x + (introEnd.x - introStart.x) * ease,
+      introStart.y + (introEnd.y - introStart.y) * ease,
+      introStart.z + (introEnd.z - introStart.z) * ease
+    );
+    ctrl.target.set(0, 0, 0);
+    ctrl.update();
+
+    if (t < 1) {
+      requestAnimationFrame(step);
+    }
+  }
+  requestAnimationFrame(step);
+}
+
 updateProbe();
-setMode('extreme'); // 同步 UI 状态并触发 updateScene / updateInfo
+setMode('extreme'); // 触发第一次 updateScene / updateInfo 渲染
 resize();
 animate();
+introAnim(); // 执行开场飞行动画
+
 setTimeout(resize, 150);
 
 console.log('%c∇ 多元函数极值与拉格朗日乘数法 %c教学工具已就绪',
