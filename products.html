@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="安溪团山堡工艺品有限公司产品展示 - 茶具系列、木雕工艺、陶瓷艺术、礼品定制">
+    <title>产品展示 - 安溪团山堡工艺品有限公司</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <a href="index.html">
+                    <span class="logo-icon">🏯</span>
+                    <span class="logo-text company-name">团山堡工艺</span>
+                </a>
+            </div>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="index.html" class="nav-link">首页</a></li>
+                <li><a href="about.html" class="nav-link">关于我们</a></li>
+                <li><a href="products.html" class="nav-link active">产品展示</a></li>
+                <li><a href="contact.html" class="nav-link">联系我们</a></li>
+            </ul>
+            <div class="hamburger" id="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 页面头部横幅 -->
+    <section class="page-header products-header">
+        <div class="header-content">
+            <h1>产品展示</h1>
+            <p class="company-slogan">精品荟萃 · 匠心之作 · 艺术臻品</p>
+            <div class="breadcrumb">
+                <a href="index.html">首页</a> / 产品展示
+            </div>
+        </div>
+    </section>
+
+    <!-- 产品分类导航 - 动态生成 -->
+    <section class="product-categories section">
+        <div class="container">
+            <div class="category-nav" id="categoryNav">
+                <!-- 筛选按钮将由 JavaScript 动态生成 -->
+                <button class="filter-btn active" data-filter="all">全部产品</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- 商品列表 - 动态加载 -->
+    <section class="products-list section">
+        <div class="container">
+            <div class="products-grid" id="productsGrid">
+                <!-- 商品卡片将由 JavaScript 动态生成 -->
+                <div class="loading-placeholder">
+                    <div class="loading-spinner"></div>
+                    <p>正在加载商品...</p>
+                </div>
+            </div>
+
+            <!-- 分页（可选） -->
+            <div class="pagination" id="pagination" style="display: none;">
+                <!-- 分页将由 JS 生成 -->
+            </div>
+        </div>
+    </section>
+
+    <!-- 定制服务说明 -->
+    <section class="custom-service section">
+        <div class="container">
+            <div class="custom-content">
+                <div class="custom-text">
+                    <h2>需要特殊定制？</h2>
+                    <p>我们提供全方位的定制服务，满足您的个性化需求：</p>
+                    <ul class="service-list">
+                        <li>✓ 企业礼品定制（支持LOGO、包装设计）</li>
+                        <li>✓ 批量订单优惠（100件以上享受批发价）</li>
+                        <li>✓ 来图来样加工（按您提供的样品生产）</li>
+                        <li>✓ 设计师一对一服务（免费设计方案）</li>
+                        <li>✓ 快速交货（常规订单7-15天交货）</li>
+                    </ul>
+                    <a href="contact.html" class="btn btn-primary">立即咨询 →</a>
+                </div>
+                <div class="custom-image">
+                    <div class="image-placeholder large">
+                        <div class="placeholder-icon">💝</div>
+                        <span>定制服务</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 页脚 - 动态加载公司信息 -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3 class="company-name">安溪团山堡工艺品有限公司</h3>
+                    <p class="company-slogan">以匠心致初心，以精品铸传奇</p>
+                    <div class="social-links">
+                        <a href="#" class="social-link">微信</a>
+                        <a href="#" class="social-link">微博</a>
+                        <a href="#" class="social-link">抖音</a>
+                    </div>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>快速链接</h4>
+                    <ul>
+                        <li><a href="index.html">首页</a></li>
+                        <li><a href="about.html">关于我们</a></li>
+                        <li><a href="products.html">产品展示</a></li>
+                        <li><a href="contact.html">联系我们</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>联系方式</h4>
+                    <ul>
+                        <li>电话：<span class="contact-phone">0595-XXXXXXX</span></li>
+                        <li>邮箱：<a href="mailto:business@tuanshanbao.com" class="email-business">contact@tuanshanbao.com</a></li>
+                        <li>地址：<span class="contact-address">福建省安溪县</span></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>关注我们</h4>
+                    <p>扫码关注公众号<br>获取最新产品和优惠信息</p>
+                    <div class="qr-code">
+                        <div class="qr-placeholder">二维码</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2026 <span class="company-name">安溪团山堡工艺品有限公司</span> 版权所有 | <span class="icp-code">闽ICP备XXXXXXX号</span></p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 回到顶部按钮 -->
+    <button class="back-to-top" id="backToTop">↑</button>
+
+    <!-- 引入配置文件和数据加载器 -->
+    <script src="data/config.js"></script>
+    <script src="js/data-loader.js"></script>
+    <script src="js/main.js"></script>
+    
+    <!-- 页面初始化脚本 -->
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            // 初始化数据加载器
+            const initialized = await dataLoader.init();
+            
+            if (initialized) {
+                // 更新页面中的公司信息
+                dataLoader.updateCompanyInfo();
+                
+                // 渲染分类筛选按钮
+                dataLoader.renderFilterButtons('categoryNav');
+                
+                // 渲染商品列表（默认显示全部上架商品）
+                dataLoader.renderProducts('productsGrid', 'all');
+                
+                console.log('✅ 产品页面加载完成');
+                console.log(`   当前显示 ${dataLoader.getActiveProducts().length} 件上架商品`);
+                console.log(`   下架商品：${dataLoader.getInactiveProducts().length} 件`);
+                console.log(`   草稿商品：${dataLoader.getDraftProducts().length} 件`);
+            } else {
+                // 加载失败时显示错误信息
+                document.getElementById('productsGrid').innerHTML = `
+                    <div class="error-message">
+                        <div class="error-icon">⚠️</div>
+                        <h3>数据加载失败</h3>
+                        <p>无法读取配置文件，请检查：</p>
+                        <ul>
+                            <li>data/config.js 文件是否存在</li>
+                            <li>文件格式是否正确</li>
+                            <li>浏览器控制台是否有错误信息</li>
+                        </ul>
+                        <a href="index.html" class="btn btn-primary">返回首页</a>
+                    </div>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>
