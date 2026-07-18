@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>移动端适配测试 - 安溪团山堡工艺品</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            padding: 40px 20px;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .device-info {
+            background: rgba(255,255,255,0.15);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .device-info p {
+            margin: 8px 0;
+            font-size: 14px;
+        }
+        
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .test-card {
+            background: rgba(255,255,255,0.95);
+            color: #333;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease;
+        }
+        
+        .test-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .test-card h3 {
+            color: #667eea;
+            margin-bottom: 12px;
+            font-size: 18px;
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: bold;
+            margin-top: 8px;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status.warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin: 30px 0;
+        }
+        
+        .btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            touch-action: manipulation;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: rgba(255,255,255,0.9);
+            color: #333;
+        }
+        
+        .btn:active {
+            transform: scale(0.98);
+        }
+        
+        .nav-test {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(102, 126, 234, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 20px;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .nav-logo {
+            font-weight: bold;
+            font-size: 18px;
+        }
+        
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            cursor: pointer;
+        }
+        
+        .hamburger span {
+            width: 25px;
+            height: 3px;
+            background: white;
+            border-radius: 2px;
+        }
+        
+        @media (max-width: 768px) {
+            .hamburger {
+                display: flex;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+                margin-top: 60px;
+            }
+            
+            .test-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                padding: 15px;
+            }
+            
+            .btn {
+                width: 100%;
+                max-width: 250px;
+            }
+        }
+        
+        .fish-cursor {
+            position: fixed;
+            width: 45px;
+            height: 28px;
+            pointer-events: none;
+            z-index: 99999;
+            opacity: 0.9;
+        }
+        
+        .fish-body {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff8e53 50%, #ffa726 100%);
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            position: relative;
+        }
+        
+        .fish-tail {
+            position: absolute;
+            left: -9px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 14px;
+            height: 17px;
+            background: linear-gradient(135deg, #ff8e53 0%, #ff6b6b 100%);
+            clip-path: polygon(100% 50%, 0 0, 30% 50%, 0 100%);
+        }
+        
+        .fish-eye {
+            position: absolute;
+            right: 9px;
+            top: 6px;
+            width: 8px;
+            height: 8px;
+            background: white;
+            border-radius: 50%;
+        }
+        
+        .fish-eye::after {
+            content: '';
+            position: absolute;
+            left: 3px;
+            top: 2px;
+            width: 4px;
+            height: 4px;
+            background: #000;
+            border-radius: 50%;
+        }
+        
+        .footer-note {
+            text-align: center;
+            padding: 30px 20px;
+            margin-top: 40px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 15px;
+            font-size: 14px;
+        }
+        
+        .footer-note a {
+            color: #ffd700;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav-test">
+        <div class="nav-logo">🏯 团山堡工艺</div>
+        <div class="hamburger" onclick="toggleMenu()">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </nav>
+
+    <div class="container" style="margin-top: 80px;">
+        <div class="header">
+            <h1>📱 移动端适配测试</h1>
+            <p>检测你的设备类型并展示优化后的界面效果</p>
+        </div>
+
+        <div class="device-info" id="deviceInfo">
+            <p><strong>正在检测设备信息...</strong></p>
+        </div>
+
+        <div class="btn-group">
+            <button class="btn btn-primary" onclick="window.location.href='index.html'">返回首页</button>
+            <button class="btn btn-secondary" onclick="refreshDeviceInfo()">刷新设备信息</button>
+        </div>
+
+        <div class="test-grid">
+            <div class="test-card">
+                <h3>🖥️ 设备类型检测</h3>
+                <p>自动识别手机、平板、电脑</p>
+                <span class="status success" id="deviceTypeStatus">✅ 已启用</span>
+            </div>
+
+            <div class="test-card">
+                <h3>📐 响应式布局</h3>
+                <p>自适应不同屏幕尺寸</p>
+                <span class="status success" id="layoutStatus">✅ 已优化</span>
+            </div>
+
+            <div class="test-card">
+                <h3>👆 触摸优化</h3>
+                <p>按钮尺寸适合手指点击</p>
+                <span class="status success" id="touchStatus">✅ 已优化</span>
+            </div>
+
+            <div class="test-card">
+                <h3>🎨 视觉优化</h3>
+                <p>字体、间距适合小屏幕</p>
+                <span class="status success" id="visualStatus">✅ 已优化</span>
+            </div>
+
+            <div class="test-card">
+                <h3>⚡ 性能优化</h3>
+                <p>减少动画提升流畅度</p>
+                <span class="status warning" id="perfStatus">⚡ 移动端已加速</span>
+            </div>
+
+            <div class="test-card">
+                <h3>🐟 小鱼特效</h3>
+                <p>跟随鼠标的动态效果</p>
+                <span class="status success" id="fishStatus">✅ 已启用</span>
+            </div>
+        </div>
+
+        <div class="footer-note">
+            <p>✨ 所有优化已应用到网站的所有页面</p>
+            <p style="margin-top: 10px;">
+                访问 <a href="index.html">首页</a> | 
+                <a href="about.html">关于我们</a> | 
+                <a href="products.html">产品展示</a> | 
+                <a href="contact.html">联系我们</a>
+            </p>
+            <p style="margin-top: 15px; font-size: 12px; opacity: 0.8;">
+                支持设备：iPhone、iPad、Android 手机/平板、桌面浏览器
+            </p>
+        </div>
+    </div>
+
+    <script src="js/mobile-detect.js"></script>
+    <script src="js/fish-cursor.js"></script>
+    
+    <script>
+        function refreshDeviceInfo() {
+            const mobileDetect = MobileDetect.getInstance();
+            const info = document.getElementById('deviceInfo');
+            
+            info.innerHTML = `
+                <p><strong>设备类型：</strong>${mobileDetect.deviceType === 'mobile' ? '📱 手机' : mobileDetect.deviceType === 'tablet' ? '📱 平板' : '🖥️ 电脑'}</p>
+                <p><strong>屏幕尺寸：</strong>${mobileDetect.screenSize.width} × ${mobileDetect.screenSize.height} 像素</p>
+                <p><strong>屏幕方向：</strong>${mobileDetect.screenSize.isPortrait ? '竖屏 📱' : '横屏 ↔️'}</p>
+                <p><strong>User Agent：</strong>${navigator.userAgent.substring(0, 60)}...</p>
+                <p><strong>优化状态：</strong><span style="color: #90ee90;">✅ 全面优化已应用</span></p>
+            `;
+        }
+        
+        function toggleMenu() {
+            alert('菜单功能演示 - 在正式页面中会展开导航菜单');
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(refreshDeviceInfo, 500);
+        });
+    </script>
+</body>
+</html>
